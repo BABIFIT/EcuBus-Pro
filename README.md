@@ -150,7 +150,7 @@ Apache-2.0
 
 ---
 
-<script setup>
+<script>
   import 'viewerjs/dist/viewer.css';
 import Viewer from 'viewerjs';
 import { onMounted,onUnmounted} from 'vue';
