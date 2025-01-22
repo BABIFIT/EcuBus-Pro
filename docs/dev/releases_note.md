@@ -1,5 +1,17 @@
 # EcuBus-Pro Release Notes
 
+## v0.8.14
+Changes from v0.8.13 to v0.8.14:
+
+ 
+* [opt]:opt ui window 
+* [bug]:fix diag append, must has transform attribute 
+* [opt]:opt tooltip time 
+* [feat]:gragh from lin database ok 
+* [feat]:add setSignal script api 
+* [opt]:opt ldf parse compatibility
+---
+
 ## v0.8.13
 Changes from v0.8.12 to v0.8.13:
 
