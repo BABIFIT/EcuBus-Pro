@@ -185,7 +185,7 @@ export default withMermaid({
       },
       {
         text: 'User Manual',
-        link: '/docs/um/concept',
+       
         items: [
           { text: 'CAN', link: '/docs/um/can/can.md' },
           { text: 'LIN', link: '/docs/um/lin/lin.md' },
@@ -200,6 +200,15 @@ export default withMermaid({
               ]
             }
           ] },
+          {
+            text:'Diagnostic',
+            items:[
+              {
+                text:'Build In Script',
+                link:'/docs/um/uds/buildInScript.md'
+              }
+            ]
+          },
           { text: 'Graph', link: '/docs/um/graph/graph.md' },
           { text: 'CLI', link: '/docs/um/cli.md' },
           {
@@ -254,6 +263,7 @@ export default withMermaid({
             text: 'UDS',
             items: [
               { text: 'UDS Hex File', link: '/examples/uds_hex_file/readme' },
+              { text: 'UDS Binary File', link: '/examples/uds_bin_file/readme' },
               { text: 'Secure Access dll', link: '/examples/secure_access_dll/readme' }
             ],
             collapsed: true
@@ -283,7 +293,7 @@ export default withMermaid({
           },
           { text: 'Comp Test', link: '/docs/dev/test' },
           { text: 'Addon', link: '/docs/dev/addon' },
-
+          { text: 'Feature Request Process', link: '/docs/dev/feature' },
           { text: 'Releases Note', link: '/docs/dev/releases_note' }
         ]
       }

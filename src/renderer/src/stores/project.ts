@@ -242,11 +242,22 @@ export const useProjectStore = defineStore('project', {
 
         const fullPath = window.path.join(this.projectInfo.path, this.projectInfo.name)
         // printNestedKeys(sortedData)
-        await window.electron.ipcRenderer.invoke(
-          'ipc-fs-writeFile',
-          fullPath,
-          JSON.stringify(sortedData, null, 2)
-        )
+        try {
+          await window.electron.ipcRenderer.invoke(
+            'ipc-fs-writeFile',
+            fullPath,
+            JSON.stringify(sortedData, null, 2)
+          )
+        } catch (e: any) {
+          error(e)
+          ElMessageBox({
+            title: 'Save Project',
+            message: `${e.toString()}`,
+            type: 'error',
+            buttonSize: 'small'
+          })
+          return
+        }
 
         this.projectDirty = false
         //update projectList
@@ -293,6 +304,8 @@ export const useProjectStore = defineStore('project', {
             .catch((action: Action) => {
               if (action == 'cancel') {
                 this.$reset()
+                const data = useDataStore()
+                data.$reset()
                 resolve(true)
               } else {
                 resolve(false)
@@ -300,6 +313,8 @@ export const useProjectStore = defineStore('project', {
             })
         } else {
           this.$reset()
+          const data = useDataStore()
+          data.$reset()
           resolve(true)
         }
       })
