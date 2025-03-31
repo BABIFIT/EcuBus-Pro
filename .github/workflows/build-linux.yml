@@ -39,3 +39,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artifact
+          path: dist/*.deb

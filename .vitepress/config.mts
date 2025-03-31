@@ -209,6 +209,7 @@ export default withMermaid({
               }
             ]
           },
+          { text: 'Trace', link: '/docs/um/trace/trace.md' },
           { text: 'Graph', link: '/docs/um/graph/graph.md' },
           { text: 'CLI', link: '/docs/um/cli.md' },
           {
@@ -227,6 +228,15 @@ export default withMermaid({
             items: [
               { text: 'LIN LDF', link: '/docs/um/ldf' },
               { text: 'CAN DBC', link: '/docs/um/dbc' }
+            ]
+          },
+          {
+            text: 'Setting',
+          
+            items: [
+              { text: 'General', link: '/docs/um/setting/general' },
+             
+              
             ]
           }
         ]

@@ -19,12 +19,13 @@ import pnpmScript from '../../resources/bin/pnpm/pnpm.cjs?asset&asarUnpack'
 import glob from 'glob'
 import testMain from './test'
 import { TestEvent } from 'node:test/reporters'
+import dllLib from '../../resources/lib/zlgcan.dll?asset&asarUnpack'
+import { build as buildFunc } from './build'
 
 declare global {
   var sysLog: Logger
   var scriptLog: Logger
 }
-
 // 创建一个自定义的 Transport 来过滤掉不需要的日志
 class FilteredConsoleTransport extends Transport {
   constructor(options: any) {
@@ -208,16 +209,6 @@ seq.action(async (project, testerName, options) => {
   }
 })
 
-const npm = program
-  .command('pnpm')
-  .description(
-    'run pnpm command, see "https://pnpm.io/" or ecb_cli pnpm --help for more information'
-  )
-npm.argument('<command>', 'pnpm command')
-// npm.option('-i, --install <package>', 'Prints the location of the globally installed executables.')
-// npm.action(async (command)=>{
-//     console.log('run npm command',command)
-
 const test = program.command('test').description('run test config')
 test.argument('<project>', 'EcuBus-Pro project path')
 test.argument('<name>', 'test config name')
@@ -236,6 +227,37 @@ test.action(async (project, name, options) => {
     exit(1)
   }
 })
+
+const build = program.command('build').description('buils script file')
+build.argument('<project>', 'EcuBus-Pro project path')
+build.argument('<file>', 'scriptfile')
+test.option('-t, --test', 'Indicate is test file')
+addLoggingOption(build)
+build.action(async (project, file, options) => {
+  createLog(options.logLevel, options.logFile)
+  try {
+    const { data, projectPath, projectName } = await parseProject(project)
+    if (!path.isAbsolute(file)) {
+      file = path.join(process.cwd(), file)
+    }
+
+    await buildFunc(projectPath, projectName, data, file, options.test)
+  } catch (e: any) {
+    console.trace(e)
+    sysLog.error(e.message || 'failed to run test config')
+    exit(1)
+  }
+})
+
+const npm = program
+  .command('pnpm')
+  .description(
+    'run pnpm command, see "https://pnpm.io/" or ecb_cli pnpm --help for more information'
+  )
+npm.argument('<command>', 'pnpm command')
+// npm.option('-i, --install <package>', 'Prints the location of the globally installed executables.')
+// npm.action(async (command)=>{
+//     console.log('run npm command',command)
 
 // })
 if (process.argv[1] == 'pnpm' || process.argv[2] == 'pnpm') {
@@ -265,7 +287,9 @@ if (process.argv[1] == 'pnpm' || process.argv[2] == 'pnpm') {
     console.log(`created package.json to ${path.join(process.cwd(), 'package.json')}`)
     exit(0)
   }
-
+  //修改process.argv
+  process.argv = ['ecubus-pro', 'pnpm', ...process.argv.slice(index + 1)]
+  const [major, minor] = process.version.slice(1).split('.')
   const vmModule = { exports: {} }
   const context = vm.createContext({
     exports: vmModule.exports,
@@ -274,9 +298,16 @@ if (process.argv[1] == 'pnpm' || process.argv[2] == 'pnpm') {
     require: require,
     global: global,
     Buffer: Buffer,
+    major: major,
+    minor: minor,
+    pnpm__startedAt: Date.now(),
     URLSearchParams: URLSearchParams,
     console: console,
-    __dirname: __dirname,
+    __dirname: path.dirname(pnpmScript),
+    __filename: __filename,
+    URL: URL,
+    setInterval: setInterval,
+    clearInterval: clearInterval,
     setTimeout: setTimeout,
     clearTimeout: clearTimeout
   })

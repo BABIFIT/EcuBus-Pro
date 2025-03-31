@@ -83,6 +83,8 @@ export interface SignalDef {
   signalSizeBits: number
   initValue: number | number[]
   value?: number | number[]
+  physValue?: number | string
+  physValueEnum?: string
   update?: boolean
   punishedBy: string
   subscribedBy: string[]
@@ -178,7 +180,7 @@ export interface SchTable {
 export interface SignalEncodeType {
   name: string
   encodingTypes: {
-    type: string
+    type: 'logicalValue' | 'physicalValue' | 'bcdValue' | 'asciiValue'
     logicalValue?: {
       signalValue: number
       textInfo?: string
@@ -194,6 +196,7 @@ export interface SignalEncodeType {
 }
 
 export interface LDF {
+  id: string
   name: string
   global: GlobalDef
   node: NodeDef
@@ -1565,7 +1568,9 @@ class LdfVistor extends visitor {
             type = 'logicalValue'
             args.logicalValue = {
               signalValue: Number((rrm.Interger[0] as IToken).image),
-              textInfo: rrm.Identifier ? (rrm.Identifier[0] as IToken).image : undefined
+              textInfo: rrm.CharString
+                ? (rrm.CharString[0] as IToken).image.replace(/"+/g, '')
+                : undefined
             }
           } else if (rs.physical_rangeClause) {
             type = 'physicalValue'
@@ -1687,6 +1692,7 @@ function formatLexerError(
   const lines = text.split('\n')
   const originalLines = originalText.split('\n')
   const lineNumber = error.line - 1
+  console.log(lineNumber, lineMapping)
   const originalLineNumber = lineMapping[lineNumber]
 
   // Get context from original text
@@ -1755,11 +1761,12 @@ Expected one of: ${(error.expectedTokens || []).join(', ')}`
 
 export default function parseInput(text: string) {
   const originalText = text
-  text = text.replace(/\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm, '$1').replace(/^\s*\n/gm, '')
+
   const lineMapping = createLineMapping(originalText, text)
 
   const lexingResult = LdfLexer.tokenize(text)
   if (lexingResult.errors.length > 0) {
+    console.log(lexingResult.errors)
     const formattedErrors = lexingResult.errors.map((err) =>
       formatLexerError(err, text, originalText, lineMapping)
     )

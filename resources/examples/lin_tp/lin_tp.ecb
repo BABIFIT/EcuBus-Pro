@@ -1,18 +1,17 @@
 {
   "data": {
     "devices": {
-      "40ba0a35-c84e-4f5f-a403-54b17c5bea12": {
+      "07ab9e32-4503-4d74-8362-92f6c785a82a": {
         "type": "lin",
         "linDevice": {
           "device": {
             "label": "",
-            "handle": "1417675180:0",
-            "id": "",
-            "toomossVolt": 2
+            "handle": 1,
+            "id": ""
           },
-          "name": "TOOMOSS_1",
-          "id": "40ba0a35-c84e-4f5f-a403-54b17c5bea12",
-          "vendor": "toomoss",
+          "name": "PEAK_0",
+          "id": "07ab9e32-4503-4d74-8362-92f6c785a82a",
+          "vendor": "peak",
           "baudRate": 19200,
           "mode": "MASTER",
           "database": "655bf90d-b010-49b5-9cf8-a9787319b5b4"
@@ -25,7 +24,7 @@
         "type": "lin",
         "id": "25cec12a-572d-4221-b85e-2728628134f7",
         "devices": [
-          "40ba0a35-c84e-4f5f-a403-54b17c5bea12"
+          "07ab9e32-4503-4d74-8362-92f6c785a82a"
         ],
         "action": []
       }
@@ -36,7 +35,7 @@
         "name": "Tester_lin_1",
         "type": "lin",
         "script": "",
-        "targetDeviceId": "40ba0a35-c84e-4f5f-a403-54b17c5bea12",
+        "targetDeviceId": "07ab9e32-4503-4d74-8362-92f6c785a82a",
         "seqList": [
           {
             "name": "Seq0",
@@ -162,7 +161,7 @@
         "type": "lin",
         "id": "9505c05a-4fe5-42e1-a45d-b1cbc14854ba",
         "channel": [
-          "40ba0a35-c84e-4f5f-a403-54b17c5bea12"
+          "07ab9e32-4503-4d74-8362-92f6c785a82a"
         ],
         "workNode": "lin:Motor1",
         "attachTester": "5459ce47-1751-4a82-94a0-9bd33ae289ab",
@@ -191,6 +190,9 @@
             "encTemperature": [
               "Motor1Temp",
               "Motor2Temp"
+            ],
+            "test": [
+              "MotorDirection"
             ]
           },
           "global": {
@@ -274,7 +276,7 @@
                 "SeatECU"
               ],
               "singleType": "Scalar",
-              "value": 7
+              "value": 20
             },
             "Motor2_Dynamic_Sig": {
               "signalName": "Motor2_Dynamic_Sig",
@@ -739,9 +741,32 @@
                 }
               ],
               "_X_ROW_KEY": "row_96"
+            },
+            "test": {
+              "name": "test",
+              "encodingTypes": [
+                {
+                  "type": "logicalValue",
+                  "logicalValue": {
+                    "signalValue": 0,
+                    "textInfo": "open"
+                  },
+                  "_X_ROW_KEY": "row_331"
+                },
+                {
+                  "type": "logicalValue",
+                  "logicalValue": {
+                    "signalValue": 1,
+                    "textInfo": "close"
+                  },
+                  "_X_ROW_KEY": "row_332"
+                }
+              ],
+              "_X_ROW_KEY": "row_294"
             }
           },
-          "name": "lin"
+          "name": "lin",
+          "id": "655bf90d-b010-49b5-9cf8-a9787319b5b4"
         }
       },
       "can": {}
@@ -787,7 +812,64 @@
         }
       }
     },
-    "tests": {}
+    "tests": {},
+    "guages": {
+      "lin.lin.signals.Motor1Temp": {
+        "type": "signal",
+        "enable": true,
+        "id": "lin.lin.signals.Motor1Temp",
+        "name": "Motor1Temp",
+        "color": "#5059c3",
+        "yAxis": {
+          "min": -20,
+          "max": 20,
+          "unit": "Degree"
+        },
+        "bindValue": {
+          "signalName": "Motor1Temp",
+          "startBit": 0,
+          "bitLength": 7,
+          "dbKey": "655bf90d-b010-49b5-9cf8-a9787319b5b4",
+          "dbName": "lin",
+          "frameId": 51
+        },
+        "graph": {
+          "id": "gauge"
+        }
+      },
+      "lin.lin.signals.MotorDirection": {
+        "type": "signal",
+        "enable": true,
+        "id": "lin.lin.signals.MotorDirection",
+        "name": "MotorDirection",
+        "color": "#82fa6d",
+        "yAxis": {
+          "min": 0,
+          "max": 3,
+          "enums": [
+            {
+              "label": "open",
+              "value": 0
+            },
+            {
+              "label": "close",
+              "value": 1
+            }
+          ]
+        },
+        "bindValue": {
+          "signalName": "MotorDirection",
+          "startBit": 0,
+          "bitLength": 2,
+          "dbKey": "655bf90d-b010-49b5-9cf8-a9787319b5b4",
+          "dbName": "lin",
+          "frameId": 45
+        },
+        "graph": {
+          "id": "gauge"
+        }
+      }
+    }
   },
   "project": {
     "wins": {
@@ -822,8 +904,8 @@
       },
       "25cec12a-572d-4221-b85e-2728628134f7_ia": {
         "pos": {
-          "x": 151,
-          "y": 223,
+          "x": 546,
+          "y": 101,
           "w": 931,
           "h": 400
         },
@@ -840,8 +922,8 @@
       },
       "5459ce47-1751-4a82-94a0-9bd33ae289ab_sequence": {
         "pos": {
-          "x": 1403,
-          "y": 273,
+          "x": 950,
+          "y": 51,
           "w": 700,
           "h": 400
         },
@@ -854,19 +936,7 @@
           },
           "name": "Tester_lin_1"
         },
-        "hide": false
-      },
-      "trace": {
-        "pos": {
-          "x": 821,
-          "y": 27,
-          "w": 1174,
-          "h": 503
-        },
-        "title": "trace",
-        "label": "Trace",
-        "id": "trace",
-        "options": {}
+        "hide": true
       },
       "graph": {
         "pos": {
@@ -878,12 +948,13 @@
         "title": "graph",
         "label": "Graph",
         "id": "graph",
-        "options": {}
+        "options": {},
+        "hide": true
       },
       "tester": {
         "pos": {
           "x": 842,
-          "y": 209,
+          "y": 171,
           "w": 1095,
           "h": 400
         },
@@ -895,8 +966,8 @@
       },
       "hardware": {
         "pos": {
-          "x": 1135,
-          "y": 97,
+          "x": 950,
+          "y": 81,
           "w": 600,
           "h": 400
         },
@@ -904,7 +975,71 @@
         "label": "Devices",
         "id": "hardware",
         "options": {},
+        "hide": true
+      },
+      "9505c05a-4fe5-42e1-a45d-b1cbc14854ba": {
+        "pos": {
+          "x": 352,
+          "y": 18,
+          "w": 765,
+          "h": 400
+        },
+        "title": "linPanel",
+        "label": "Panel",
+        "id": "9505c05a-4fe5-42e1-a45d-b1cbc14854ba",
+        "options": {
+          "params": {
+            "editIndex": "9505c05a-4fe5-42e1-a45d-b1cbc14854ba"
+          },
+          "name": "Node 1"
+        },
         "hide": false
+      },
+      "trace": {
+        "pos": {
+          "x": 898.5,
+          "y": 46,
+          "w": 700,
+          "h": 400
+        },
+        "title": "trace",
+        "label": "Trace",
+        "id": "trace",
+        "options": {}
+      },
+      "655bf90d-b010-49b5-9cf8-a9787319b5b4": {
+        "pos": {
+          "x": 837.5,
+          "y": 48,
+          "w": 700,
+          "h": 400
+        },
+        "title": "ldf",
+        "label": "LDF",
+        "id": "655bf90d-b010-49b5-9cf8-a9787319b5b4",
+        "options": {
+          "params": {
+            "edit-index": "655bf90d-b010-49b5-9cf8-a9787319b5b4"
+          },
+          "name": "lin"
+        },
+        "hide": true
+      },
+      "gauge": {
+        "pos": {
+          "x": 22.5,
+          "y": 49,
+          "w": 924,
+          "h": 400
+        },
+        "title": "gauge",
+        "label": "Gauge",
+        "id": "gauge",
+        "options": {
+          "params": {
+            "edit-index": "gauge"
+          }
+        }
       }
     },
     "example": {

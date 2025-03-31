@@ -38,6 +38,20 @@
                 style="width: 100px"
                 @change="handlePhysicalValueChange($event, parent.row.name, row)"
               />
+              <el-select
+                v-else-if="getLogicalValue(row.encodingType).length > 0"
+                v-model="rawValues[`${parent.row.name}-${row.name}`]"
+                size="small"
+                style="width: 100%"
+                @change="handleRawValueChange($event, parent.row.name, row)"
+              >
+                <el-option
+                  v-for="item in getLogicalValue(row.encodingType)"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                ></el-option>
+              </el-select>
               <span v-else>-</span>
             </template>
             <template #raw="{ row }">
@@ -71,6 +85,7 @@ import { LDF, getFrameSize } from '@r/database/ldfParse'
 import { LinInter } from 'src/preload/data'
 import { getFrameData } from 'nodeCan/lin'
 import { isEqual } from 'lodash'
+import { getPhysicalValue, getRawValue } from '@r/database/ldf/calc'
 
 interface SignalRow {
   name: string
@@ -130,41 +145,6 @@ const workNode = computed(() => {
 const physicalValues = ref<Record<string, string>>({})
 const rawValues = ref<Record<string, string>>({})
 
-const getPhysicalValue = (rawValue: number, encodingType: string, db: LDF) => {
-  const encoding = db.signalEncodeTypes[encodingType]
-  if (!encoding) return rawValue.toString()
-
-  for (const type of encoding.encodingTypes) {
-    if (type.type === 'physicalValue' && type.physicalValue) {
-      const { minValue, maxValue, scale, offset } = type.physicalValue
-      // Check if raw value is within the valid range (min to max)
-      if (rawValue >= minValue && rawValue <= maxValue) {
-        // Apply the physical value calculation formula
-        return (scale * rawValue + offset).toString()
-      }
-    }
-  }
-  return rawValue.toString()
-}
-
-const getRawValue = (physicalValue: number, encodingType: string, db: LDF) => {
-  const encoding = db.signalEncodeTypes[encodingType]
-  if (!encoding) return physicalValue
-
-  for (const type of encoding.encodingTypes) {
-    if (type.type === 'physicalValue' && type.physicalValue) {
-      const { minValue, maxValue, scale, offset } = type.physicalValue
-      // Reverse the physical value formula
-      const rawValue = (physicalValue - offset) / scale
-      // Check if calculated raw value is within valid range
-      if (rawValue >= minValue && rawValue <= maxValue) {
-        return rawValue
-      }
-    }
-  }
-  return physicalValue
-}
-
 // Add function to check if encoding has physical value type
 const hasPhysicalEncoding = (encodingType?: string) => {
   if (!encodingType || !db.value) return false
@@ -172,6 +152,27 @@ const hasPhysicalEncoding = (encodingType?: string) => {
   if (!encoding) return false
 
   return encoding.encodingTypes.some((type) => type.type === 'physicalValue')
+}
+
+const getLogicalValue = (encodingType?: string) => {
+  const list: {
+    label: string
+    value: string
+  }[] = []
+  if (!encodingType || !db.value) return list
+
+  const encoding = db.value.signalEncodeTypes[encodingType]
+  if (!encoding) return list
+
+  for (const type of encoding.encodingTypes) {
+    if (type.type === 'logicalValue') {
+      list.push({
+        label: type.logicalValue!.textInfo || `${type.logicalValue!.signalValue}`,
+        value: type.logicalValue!.signalValue.toString()
+      })
+    }
+  }
+  return list
 }
 
 // 修改工具函数
@@ -188,10 +189,18 @@ const updateSignalDisplayValues = (
   const rawValue = restore ? (signalDef.value ?? signalDef.initValue) : signalDef.initValue
   const rawValueStr = Array.isArray(rawValue) ? rawValue.join(',') : rawValue?.toString()
   rawValues.value[`${frameName}-${signal.name}`] = rawValueStr || ''
-  physicalValues.value[`${frameName}-${signal.name}`] =
-    signal.encodingType && hasPhysicalEncoding(signal.encodingType)
-      ? getPhysicalValue(Number(rawValueStr), signal.encodingType, db.value)
-      : ''
+  if (signal.encodingType) {
+    const encodeInfo = db.value.signalEncodeTypes[signal.encodingType]
+    const { numVal, strVal, usedEncode } = getPhysicalValue(
+      Number(rawValueStr),
+      encodeInfo.encodingTypes,
+      db.value
+    )
+    if (usedEncode) {
+      physicalValues.value[`${frameName}-${signal.name}`] =
+        numVal !== undefined ? numVal.toString() : ''
+    }
+  }
 }
 
 // Update tableData to only show relevant frames
@@ -290,7 +299,7 @@ const childGridOptions = computed(() => {
       { field: 'bitLength', title: 'Bits', width: 100 },
       {
         field: 'physicalValue',
-        title: 'Physical Value',
+        title: 'Physical/Logical Value',
         minWidth: 200,
         slots: { default: 'physical' }
       },
@@ -301,34 +310,34 @@ const childGridOptions = computed(() => {
   return options
 })
 
-const validatePhysicalValue = (value: string, signal: SignalRow): boolean => {
-  if (!db.value || !signal.encodingType) return false
-  const encoding = db.value.signalEncodeTypes[signal.encodingType]
-  if (!encoding) return false
+// const validatePhysicalValue = (value: string, signal: SignalRow): boolean => {
+//   if (!db.value || !signal.encodingType) return false
+//   const encoding = db.value.signalEncodeTypes[signal.encodingType]
+//   if (!encoding) return false
 
-  const numValue = Number(value)
-  if (isNaN(numValue)) return false
+//   const numValue = Number(value)
+//   if (isNaN(numValue)) return false
 
-  for (const type of encoding.encodingTypes) {
-    if (type.type === 'physicalValue' && type.physicalValue) {
-      const { minValue, maxValue, scale, offset } = type.physicalValue
+//   for (const type of encoding.encodingTypes) {
+//     if (type.type === 'physicalValue' && type.physicalValue) {
+//       const { minValue, maxValue, scale, offset } = type.physicalValue
 
-      // Validate encoding range according to LIN spec
-      if (minValue < 0 || maxValue > 65535 || minValue > maxValue) {
-        return false
-      }
+//       // Validate encoding range according to LIN spec
+//       if (minValue < 0 || maxValue > 65535 || minValue > maxValue) {
+//         return false
+//       }
 
-      // Calculate corresponding raw value
-      const rawValue = (numValue - offset) / scale
+//       // Calculate corresponding raw value
+//       const rawValue = (numValue - offset) / scale
 
-      // Raw value must be within min/max range and be an integer
-      if (rawValue >= minValue && rawValue <= maxValue && Number.isInteger(rawValue)) {
-        return true
-      }
-    }
-  }
-  return false
-}
+//       // Raw value must be within min/max range and be an integer
+//       if (rawValue >= minValue && rawValue <= maxValue && Number.isInteger(rawValue)) {
+//         return true
+//       }
+//     }
+//   }
+//   return false
+// }
 
 const validateRawValue = (value: string, signal: SignalRow): boolean => {
   if (!db.value) return false
@@ -358,22 +367,20 @@ const validateRawValue = (value: string, signal: SignalRow): boolean => {
 }
 
 const handlePhysicalValueChange = (value: string, frameName: string, signal: SignalRow) => {
-  if (!validatePhysicalValue(value, signal) || value == '') {
+  if (!db.value) return
+  if (!signal.encodingType) return
+  const encodeInfo = db.value.signalEncodeTypes[signal.encodingType]
+  const val = getRawValue(Number(value), encodeInfo.encodingTypes, db.value)
+  if (val.value === undefined) {
     updateSignalDisplayValues(frameName, signal, true)
     return
   }
 
   if (!db.value) return
 
-  let rawValue: number
-  if (signal.encodingType) {
-    rawValue = getRawValue(Number(value), signal.encodingType, db.value)
-  } else {
-    rawValue = Number(value)
-  }
-  rawValues.value[`${frameName}-${signal.name}`] = rawValue.toString()
+  rawValues.value[`${frameName}-${signal.name}`] = val.value.toString()
   // 更新数据库
-  updateSignalValue(frameName, signal.name, rawValue)
+  updateSignalValue(frameName, signal.name, val.value)
 }
 
 const handleRawValueChange = (value: string, frameName: string, signal: SignalRow) => {
@@ -394,12 +401,18 @@ const handleRawValueChange = (value: string, frameName: string, signal: SignalRo
 
     // Validate physical value if encoding exists
     if (signal.encodingType) {
-      const physicalValue = getPhysicalValue(numValue, signal.encodingType, db.value)
-      if (!validatePhysicalValue(physicalValue, signal)) {
-        updateSignalDisplayValues(frameName, signal, true)
-        return
+      const encodeInfo = db.value.signalEncodeTypes[signal.encodingType]
+      const { numVal, strVal, usedEncode } = getPhysicalValue(
+        numValue,
+        encodeInfo.encodingTypes,
+        db.value
+      )
+      if (usedEncode) {
+        //
+
+        physicalValues.value[`${frameName}-${signal.name}`] =
+          numVal !== undefined ? numVal.toString() : ''
       }
-      physicalValues.value[`${frameName}-${signal.name}`] = physicalValue
     }
     updateSignalValue(frameName, signal.name, numValue)
   }
@@ -415,7 +428,7 @@ const resetAllSignals = () => {
 
       updateSignalDisplayValues(frame.name, signal, false) // 使用初始值
       // Update database value
-      db.value.signals[signal.name].value = undefined
+      updateSignalValue(frame.name, signal.name, signalDef.initValue)
     }
   }
 }

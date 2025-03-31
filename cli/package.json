@@ -4,11 +4,16 @@
     "description": "EcbBus-Pro CLI Tool",
     "bin":"out/ecb_cli.js",
     "pkg": {
-      "assets": "./out/chunks/*.node",
-      "outputPath": "./../resources/bin"
+      "assets": ["./out/chunks/*.node",
+      "./../resources/lib/**/*",
+      "./../resources/bin/**/*",
+      "./../resources/buildInScript/**/*"
+    ],
+      "outputPath": "./../resources/lib"
     },
     "scripts": {
       "linux": "pkg . -t node20-linux",
-      "win": "pkg . -t node20-win"
+      "win": "pkg . -t node20-win",
+      "mac": "pkg . -t node20-macos"
     }
   }

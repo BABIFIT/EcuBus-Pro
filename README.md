@@ -12,6 +12,9 @@
     <a href="https://github.com/ecubus/EcuBus-Pro/releases">
       <img src="https://github.com/ecubus/EcuBus-Pro/actions/workflows/build-linux.yml/badge.svg" alt="github-ci" />
     </a>
+    <a href="https://github.com/ecubus/EcuBus-Pro/actions/workflows/build-mac.yml">
+      <img src="https://github.com/ecubus/EcuBus-Pro/actions/workflows/build-mac.yml/badge.svg" alt="github-ci" />
+    </a>
     <a href="https://github.com/ecubus/EcuBus-Pro">
        <img src="https://img.shields.io/github/stars/ecubus/EcuBus-Pro"/>
     </a>
@@ -29,7 +32,7 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
 
 - 🆓 Open-source and free to use
 - 🚀 Modern, intuitive user interface
-- 💻 Cross-platform support (Windows, Linux) - [Install](./docs/about/install.md)
+- 💻 Cross-platform support (Windows, Linux, MacOS) - [Install](./docs/about/install.md)
 - 🔌 Multi-hardware support
   - **PEAK**: CAN, CAN-FD, LIN
   - **KVASER**: CAN, CAN-FD
@@ -93,4 +96,4 @@ Thanks to these amazing people who helped improve `EcuBus-Pro` by reporting issu
 
 ## License
 
-Apache-2.0
+[License](./license.txt)

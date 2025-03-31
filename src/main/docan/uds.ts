@@ -1206,7 +1206,7 @@ export * from './utli'
             }
           ],
           extensions: {
-            recommendations: ['ms-vscode.vscode-typescript-next']
+            recommendations: [] /*'ms-vscode.vscode-typescript-next'*/
           }
         },
         null,
@@ -1308,7 +1308,7 @@ export async function compileTsc(
     const outputDir = path.join(projectPath, '.ScriptBuild')
 
     try {
-      await compileTscEntry(script, outputDir, esbuildPath, libPath, isTest)
+      await compileTscEntry(projectPath, script, outputDir, esbuildPath, libPath, isTest)
     } catch (e: any) {
       return [{ code: -1, message: e.message, file: entry, start: 0, line: 0 }]
     }
@@ -1317,6 +1317,7 @@ export async function compileTsc(
 }
 
 async function compileTscEntry(
+  projectPath: string,
   entry: string,
   outputDir: string,
   esbuildPath: string,
@@ -1334,6 +1335,7 @@ async function compileTscEntry(
     '--format=cjs',
     `--alias:ECB=${libPath}`,
     `--alias:@serialport/bindings-cpp=${libPath}/bindings-cpp`,
+    `--alias:bindings=${libPath}/node-bindings`,
     `--outdir=${outputDir}`,
     `--inject:${path.join(libPath, 'uds.js')}`
   ]
@@ -1359,6 +1361,23 @@ async function compileTscEntry(
   for (const nodeFile of nodeFiles) {
     const src = path.join(libPath, nodeFile)
     const dest = path.join(outputDir, nodeFile)
+    if (!fs.existsSync(dest)) {
+      await fsP.copyFile(src, dest)
+    }
+  }
+
+  const nodeFilesInProject = await glob(['**/*.node', '**/*.dll'], {
+    cwd: path.join(projectPath, 'node_modules'),
+    dot: true, // 包含以点开头的文件/文件夹
+    follow: false, // 关键：跟随软链接
+    nodir: true, // 只匹配文件
+    absolute: false, // 返回相对路径
+    ignore: ['@types/**'] // 排除@types目录
+  })
+  for (const nodeFile of nodeFilesInProject) {
+    const src = path.join(projectPath, 'node_modules', nodeFile)
+    const name = path.basename(nodeFile)
+    const dest = path.join(outputDir, name)
     if (!fs.existsSync(dest)) {
       await fsP.copyFile(src, dest)
     }

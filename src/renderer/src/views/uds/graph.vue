@@ -93,7 +93,7 @@
             </el-tree>
           </el-scrollbar>
         </div>
-        <div v-show="!hideTree" id="graphShift" class="shift" />
+        <div v-show="!hideTree" :id="`graphShift-${props.editIndex}`" class="shift" />
         <div class="right" :style="{ left: hideTree ? '0px' : leftWidth + 5 + 'px' }">
           <div
             class="canvas-container"
@@ -120,7 +120,7 @@
               }"
               class="chart-container"
             >
-              <div :id="`chart-${chart.id}`" style="width: 100%; height: 100%" />
+              <div :id="`chart-${props.editIndex}-${chart.id}`" style="width: 100%; height: 100%" />
             </div>
           </div>
         </div>
@@ -146,6 +146,7 @@
       :append-to="appendId"
     >
       <edit-signal
+        stype="line"
         :height="tableHeight"
         :node="editingNode"
         @save="handleEditSave"
@@ -177,6 +178,7 @@ import type { ECBasicOption } from 'echarts/types/dist/shared'
 import { ElNotification, formatter } from 'element-plus'
 import signal from './components/signal.vue'
 import editSignal from './components/editSignal.vue'
+import { LineSeriesOption } from 'echarts'
 
 use([LineChart, GridComponent, DataZoomComponent, CanvasRenderer])
 
@@ -194,7 +196,7 @@ const appendId = computed(() => (props.editIndex ? `#win${props.editIndex}` : '#
 const height = computed(() => props.height - 22)
 const tableHeight = computed(() => (height.value * 2) / 3)
 // 修改测试数据
-const filteredTreeData = ref<GraphNode<GraphBindSignalValue>[]>([])
+const filteredTreeData = ref<GraphNode<GraphBindSignalValue, LineSeriesOption>[]>([])
 const treeRef = ref()
 const time = ref(0)
 
@@ -211,7 +213,10 @@ function treeHide() {
   // 如果需要在隐藏/显示时保存之前的宽度，可以添加相关逻辑
 }
 
-function handleCheckChange(data: GraphNode<GraphBindSignalValue>, checked: boolean) {
+function handleCheckChange(
+  data: GraphNode<GraphBindSignalValue, LineSeriesOption>,
+  checked: boolean
+) {
   graphs[data.id].enable = checked
   filteredTreeData.value.forEach((node) => {
     if (node.id === data.id) {
@@ -230,13 +235,13 @@ const canvasWidth = computed(() => {
   return hideTree.value ? props.width : props.width - leftWidth.value - 5
 })
 
-const handleEdit = (data: GraphNode<GraphBindSignalValue>, event: Event) => {
+const handleEdit = (data: GraphNode<GraphBindSignalValue, LineSeriesOption>, event: Event) => {
   popoverRefs.value[data.id]?.hide()
   editingNode.value = { ...data }
   editDialogVisible.value = true
 }
 
-const handleEditSave = (updatedNode: GraphNode<GraphBindSignalValue>) => {
+const handleEditSave = (updatedNode: GraphNode<GraphBindSignalValue, LineSeriesOption>) => {
   const index = filteredTreeData.value.findIndex((v) => v.id === updatedNode.id)
   if (index !== -1) {
     filteredTreeData.value[index] = updatedNode
@@ -410,7 +415,7 @@ let timer
 
 // 修改初始化图表实例函数
 const initChart = (chartId: string) => {
-  const dom = document.getElementById(`chart-${chartId}`)
+  const dom = document.getElementById(`chart-${props.editIndex}-${chartId}`)
 
   if (dom) {
     const chart = echarts.init(dom)
@@ -602,7 +607,10 @@ watch([() => canvasWidth.value, () => height.value, enabledCharts], () => {
   })
 })
 
-const getChartOption = (chart: GraphNode<GraphBindSignalValue>, index: number): ECBasicOption => {
+const getChartOption = (
+  chart: GraphNode<GraphBindSignalValue, LineSeriesOption>,
+  index: number
+): ECBasicOption => {
   const isLast = index === enabledCharts.value.length - 1
   const isFirst = index === 0
   const option: ECBasicOption = {
@@ -685,7 +693,10 @@ const getChartOption = (chart: GraphNode<GraphBindSignalValue>, index: number): 
           if (val.length > 6) {
             return ''
           }
-          return val
+          if (val.length > 0) {
+            return val + (chart.yAxis?.unit ?? '')
+          }
+          return ''
         }
       },
       name: chart.name,
@@ -729,7 +740,7 @@ const getChartOption = (chart: GraphNode<GraphBindSignalValue>, index: number): 
 }
 
 onMounted(() => {
-  window.jQuery('#graphShift').resizable({
+  window.jQuery(`#graphShift-${props.editIndex}`).resizable({
     handles: 'e',
     resize: (e, ui) => {
       leftWidth.value = ui.size.width
@@ -742,6 +753,7 @@ onMounted(() => {
     if (v.graph && v.graph.id != props.editIndex) {
       continue
     }
+
     filteredTreeData.value.push(v)
   }
   // 初始化所有图表
